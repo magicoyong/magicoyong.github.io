@@ -7,7 +7,16 @@
         <generator>Hugo -- gohugo.io</generator>
         <language>zh-cn</language>
         <copyright>yy</copyright>
-        <lastBuildDate>Tue, 08 Apr 2025 20:00:00 +0800</lastBuildDate><atom:link href="https://magicoyong.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Tue, 08 Apr 2025 21:00:00 +0800</lastBuildDate><atom:link href="https://magicoyong.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>测试文章</title>
+        <link>https://magicoyong.github.io/p/%E6%B5%8B%E8%AF%95%E6%96%87%E7%AB%A0/</link>
+        <pubDate>Tue, 08 Apr 2025 21:00:00 +0800</pubDate>
+        
+        <guid>https://magicoyong.github.io/p/%E6%B5%8B%E8%AF%95%E6%96%87%E7%AB%A0/</guid>
+        <description>&lt;p&gt;这是我发布的第一篇测试文章！&lt;/p&gt;
+</description>
+        </item>
+        <item>
         <title>Project Report</title>
         <link>https://magicoyong.github.io/p/project-report/</link>
         <pubDate>Tue, 08 Apr 2025 20:00:00 +0800</pubDate>
