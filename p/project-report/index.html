@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="zh-cn" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content="Report 生存分析是一种统计方法，用于检查和预测事件发生前的时间。这种形式的分析起源于医疗保健，关注的是死亡时间。从那时起，生存分析已经成功地应用到全球几乎每个行业中。下面将依据databrick中的IBM&rsquo;s Telco的客户留存相关数据来分析，解释survival analysis的主要流程。\n">
+<title>Project Report</title>
+
+<link rel='canonical' href='https://magicoyong.github.io/p/project-report/'>
+
+<link rel="stylesheet" href="/scss/style.min.663803bebe609202d5b39d848f2d7c2dc8b598a2d879efa079fa88893d29c49c.css"><meta property='og:title' content="Project Report">
+<meta property='og:description' content="Report 生存分析是一种统计方法，用于检查和预测事件发生前的时间。这种形式的分析起源于医疗保健，关注的是死亡时间。从那时起，生存分析已经成功地应用到全球几乎每个行业中。下面将依据databrick中的IBM&rsquo;s Telco的客户留存相关数据来分析，解释survival analysis的主要流程。\n">
+<meta property='og:url' content='https://magicoyong.github.io/p/project-report/'>
+<meta property='og:site_name' content='yy'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:published_time' content='2025-04-08T20:00:00&#43;08:00'/><meta property='article:modified_time' content='2025-04-08T20:00:00&#43;08:00'/>
+<meta name="twitter:title" content="Project Report">
+<meta name="twitter:description" content="Report 生存分析是一种统计方法，用于检查和预测事件发生前的时间。这种形式的分析起源于医疗保健，关注的是死亡时间。从那时起，生存分析已经成功地应用到全球几乎每个行业中。下面将依据databrick中的IBM&rsquo;s Telco的客户留存相关数据来分析，解释survival analysis的主要流程。\n">
+    <link rel="shortcut icon" href="/favicon.ico" />
+
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column extended"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="切换菜单">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu_a8142536739827be.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+                    <span class="emoji">💸</span>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">yy</a></h1>
+            <h2 class="site-description">hi~</h2>
+        </div>
+    </header><ol class="menu-social">
+            
+                <li>
+                    <a 
+                        href='https://github.com/magicoyong'
+                        target="_blank"
+                        title="GitHub"
+                        rel="me"
+                    >
+                        
+                        
+                            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+  <path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5" />
+</svg>
+
+
+
+                        
+                    </a>
+                </li>
+            
+        </ol><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>主页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/%E5%85%B3%E4%BA%8E/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>关于</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/archives/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/search/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="10" cy="10" r="7" />
+  <line x1="21" y1="21" x2="15" y2="15" />
+</svg>
+
+
+
+                
+                <span>Search</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/links/' >
+                
+                
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-link" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M10 14a3.5 3.5 0 0 0 5 0l4 -4a3.5 3.5 0 0 0 -5 -5l-.5 .5" />
+  <path d="M14 10a3.5 3.5 0 0 0 -5 0l-4 4a3.5 3.5 0 0 0 5 5l.5 -.5" />
+</svg>
+
+
+
+                
+                <span>Links</span>
+            </a>
+        </li>
+        
+        <li class="menu-bottom-section">
+            <ol class="menu">
+
+                
+                    <li id="dark-mode-toggle">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                        <span>暗色模式</span>
+                    </li>
+                
+            </ol>
+        </li>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/p/project-report/">Project Report</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Apr 08, 2025</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    阅读时长: 12 分钟
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="report">Report
+</h1><p>生存分析是一种统计方法，用于检查和预测事件发生前的时间。这种形式的分析起源于医疗保健，关注的是死亡时间。从那时起，生存分析已经成功地应用到全球几乎每个行业中。下面将依据databrick中的IBM&rsquo;s Telco的客户留存相关数据来分析，解释survival analysis的主要流程。</p>
+<h2 id="data-load-and-data-process">Data load and Data Process
+</h2><ol>
+<li><strong>数据介绍:</strong></li>
+</ol>
+<p>​	此数据集中的每条记录代表一个订阅者，并包含有关其各自的人口统计数据、服务计划、媒体使用和订阅状态的相关信息。其中，这个数据集包含了生存分析	所需的两列:</p>
+<p>​	==Tenure:==客户与公司合作的时间(如果仍然是订户)或在流失之前与公司合作的时间。</p>
+<p>​	==Churn:== 一个代表客户是否仍在订阅公司的布尔值。</p>
+<ol start="2">
+<li>**数据读取: **通过spark读取csv中的数据，并以以下schama对bronze_df建表:</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Define schema</span>
+</span></span><span class="line"><span class="cl"><span class="n">schema</span> <span class="o">=</span> <span class="n">StructType</span><span class="p">([</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;customerID&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;gender&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;seniorCitizen&#39;</span><span class="p">,</span> <span class="n">DoubleType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;partner&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;dependents&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;tenure&#39;</span><span class="p">,</span> <span class="n">DoubleType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;phoneService&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;multipleLines&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;internetService&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span> 
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;onlineSecurity&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;onlineBackup&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;deviceProtection&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;techSupport&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;streamingTV&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;streamingMovies&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;contract&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;paperlessBilling&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;paymentMethod&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;monthlyCharges&#39;</span><span class="p">,</span> <span class="n">DoubleType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;totalCharges&#39;</span><span class="p">,</span> <span class="n">DoubleType</span><span class="p">()),</span>
+</span></span><span class="line"><span class="cl">  <span class="n">StructField</span><span class="p">(</span><span class="s1">&#39;churnString&#39;</span><span class="p">,</span> <span class="n">StringType</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">  <span class="p">])</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>对bronze_df进行处理，以保证分析的重点数据。首先，将bronze_df中的<strong>churnString</strong> 转换为布尔类型;再将其中的⻓期订阅用户和未使用网络服务的用户过滤，便得 到silver_df。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Construct silver table</span>
+</span></span><span class="line"><span class="cl"><span class="n">silver_df</span> <span class="o">=</span> <span class="n">bronze_df</span><span class="o">.</span><span class="n">withColumn</span><span class="p">(</span><span class="s1">&#39;churn&#39;</span><span class="p">,</span><span class="n">when</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;churnString&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Yes&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">when</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;churnString&#39;</span><span class="p">)</span> <span class="o">==</span> 					<span class="s1">&#39;No&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">otherwise</span><span class="p">(</span><span class="s1">&#39;Unknown&#39;</span><span class="p">))</span>\   
+</span></span><span class="line"><span class="cl">                     <span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;churnString&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;contract&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;Month-to-month&#39;</span><span class="p">)</span>\
+</span></span><span class="line"><span class="cl">                     <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">col</span><span class="p">(</span><span class="s1">&#39;internetService&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s1">&#39;No&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><ol start="3">
+<li><strong>构建数据库和转存文件:</strong></li>
+</ol>
+<p>​	 因为无法配置delta lake文件系统，所以在复现时使用了csv文件来储存数据。代码如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">bronze_tbl_path</span> <span class="o">=</span> <span class="s2">&#34;./data/broze.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">silver_tbl_path</span> <span class="o">=</span> <span class="s2">&#34;./data/silver.csv&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Write out bronze-level data to csv</span>
+</span></span><span class="line"><span class="cl"><span class="n">_</span> <span class="o">=</span> <span class="n">bronze_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;csv&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;header&#34;</span><span class="p">,</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">bronze_tbl_path</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Write out silver-level data to csv</span>
+</span></span><span class="line"><span class="cl"><span class="n">_</span> <span class="o">=</span> <span class="n">silver_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;csv&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;header&#34;</span><span class="p">,</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">silver_tbl_path</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>同时，在mysql中建立<code>Survival_Analysis</code>数据库及相关表格。最后将数据写入database 中，代码如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">silver_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&#34;jdbc&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;url&#34;</span><span class="p">,</span> <span class="s2">&#34;jdbc:mysql://localhost:3306/Survival_Analysis?useSSL=false&amp;serverTimezone=UTC&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;driver&#34;</span><span class="p">,</span> <span class="s2">&#34;com.mysql.cj.jdbc.Driver&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;dbtable&#34;</span><span class="p">,</span> <span class="s2">&#34;silver&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;root&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;password&#34;</span><span class="p">,</span> <span class="s2">&#34;123456&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&#34;overwrite&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">bronze_df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&#34;jdbc&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;url&#34;</span><span class="p">,</span> <span class="s2">&#34;jdbc:mysql://localhost:3306/Survival_Analysis?useSSL=false&amp;serverTimezone=UTC&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;driver&#34;</span><span class="p">,</span> <span class="s2">&#34;com.mysql.cj.jdbc.Driver&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;dbtable&#34;</span><span class="p">,</span> <span class="s2">&#34;Bronze&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;user&#34;</span><span class="p">,</span> <span class="s2">&#34;root&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&#34;password&#34;</span><span class="p">,</span> <span class="s2">&#34;123456&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s2">&#34;overwrite&#34;</span><span class="p">)</span> \
+</span></span><span class="line"><span class="cl">              <span class="o">.</span><span class="n">save</span><span class="p">()</span>              
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="绘制kaplan-meier生存曲线及-log-rank-test">绘制<strong>Kaplan-Meier</strong>生存曲线及 <strong>log-rank test</strong>
+</h2><ul>
+<li>
+<p>Kaplan-Meier是一种用于构建生存概率曲线的统计方法。</p>
+</li>
+<li>
+<p>log-rank检验是一种卡方检验，用于检验两个或多个生存曲线在统计上相等的零假设。</p>
+<p>代码如下:</p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">lifelines</span> <span class="kn">import</span> <span class="n">KaplanMeierFitter</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">lifelines.utils</span> <span class="kn">import</span> <span class="n">median_survival_times</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">lifelines.statistics</span> <span class="kn">import</span> <span class="n">pairwise_logrank_test</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Load the telco silver table</span>
+</span></span><span class="line"><span class="cl"><span class="n">telco_pd</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;silver_monthly_customers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">kmf</span> <span class="o">=</span> <span class="n">KaplanMeierFitter</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">T</span><span class="o">=</span><span class="n">telco_pd</span><span class="p">[</span><span class="s1">&#39;tenure&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">C</span><span class="o">=</span><span class="n">telco_pd</span><span class="p">[</span><span class="s1">&#39;churn&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">kmf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1">### 绘制分布生存曲线</span>
+</span></span><span class="line"><span class="cl"><span class="n">kmf</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s1">&#39;Kaplan-Meier Survival Curve: Population level&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><img src="./pic/1.png" width="600">
+<ul>
+<li>x轴代表时间，y轴代表生存概率。</li>
+<li>解释: 在最简单的情况下，客户存活至少0个月的概率是100%。这由上图中的点 (0,1.0)表示。将生存曲线向下移动到中位数(34个月)，可以说如果客户已经留存了 33个月，则有50%的概率存活至少34个月。</li>
+<li>置信区间: 生存概率曲线周围的浅蓝色边框表示置信区间。区间越宽，置信度越低。如上图所示，随着时间线的增加，估计的可信度会降低。虽然这种信心的降低可能是由于数据的减少，但通常对近期的预测比⻓期的预测更有信心，同时这也符合直觉。</li>
+</ul>
+<h3 id="绘制协变量生存曲线">绘制协变量生存曲线
+</h3><p>绘制方法函数:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Helper function for plotting Kaplan-Meier curves at the covariate level</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">plot_km</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    	<span class="n">ix</span> <span class="o">=</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="n">r</span>
+</span></span><span class="line"><span class="cl">   	 	<span class="n">kmf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">C</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">r</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    	<span class="n">kmf</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Helper function for printing out Log-rank test results</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">print_logrank</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">log_rank</span> <span class="o">=</span> <span class="n">pairwise_logrank_test</span><span class="p">(</span><span class="n">telco_pd</span><span class="p">[</span><span class="s1">&#39;tenure&#39;</span><span class="p">],</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">],</span><span class="n">telco_pd</span><span class="p">[</span><span class="s1">&#39;churn&#39;</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">log_rank</span><span class="o">.</span><span class="n">summary</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p>绘制曲线:
+代码较为重复，所以不全部展示。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># plot km curve</span>
+</span></span><span class="line"><span class="cl"><span class="n">plot_km</span><span class="p">(</span><span class="s1">&#39;gender&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># log-rank test</span>
+</span></span><span class="line"><span class="cl"><span class="n">print_logrank</span><span class="p">(</span><span class="s1">&#39;gender&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><img src="./pic/2.png" alt="2" style="zoom:50%;" />
+<img src="./pic/3.png" alt="3" style="zoom:50%;" />
+<img src="./pic/4.png" alt="4" style="zoom:50%;" />
+<p>对于Kaplan-Meier curves，我们更需要有着显著性差异的变量，这样的变量代表对留存率有着较大的影响。而对于生存曲线距离特别近的变量，我们需要使用log-rank test来判断他们是否在统计意义上是相等的。同时，对于生存曲线相交的变量我们需要尤其注意，因为这种现象 通常代表着在不同时间，该变量对于留存率的表现有差别。从上面的Kaplan-Meier curves和 log-rank test中不难看出，gender, phoneService，对于生存概率影响不大，在后续的建模中可以省去。</p>
+<h3 id="提取生存概率">提取生存概率
+</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_survival_probs</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">val</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ix</span> <span class="o">=</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="n">val</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">kmf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span><span class="n">C</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">val</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="cox-proportional-hazards-model"><strong>Cox Proportional Hazards Model</strong>
+</h2><ul>
+<li>与Kaplan-Meier相比，Cox比例⻛险可用于多变量分析。</li>
+<li>与Kaplan-Meier类似，Cox比例⻛险法也可用于绘制生存概率曲线，但其处理方法在数学上有所不同。这个结果被称为<em>adjusted survival probability curves</em>曲线，因为对其他协变量进行了调整。</li>
+</ul>
+<h3 id="the-cox-proportional-hazards-equation"><strong>The Cox Proportional Hazards Equation</strong>
+</h3><ul>
+<li>
+<p>Kaplan-Meier 用于估计生存概率，Cox 比例风险用于估计风险比。风险比表示存在于两个个体（或群体）之间的风险差异。风险本质上是生存的反义词，或者说是失败的可能性。Kaplan-Meier 估计的是生存概率，而 Cox 比例风险估计的是风险比。可以使用 <code>Lifelines</code> 完成。</p>
+</li>
+<li>
+<p>Cox 比例风险方程指出，风险比是基线风险和部分风险的乘积。</p>
+</li>
+<li>
+<p>基线危害是指当每个变量被设置为特定值时，就会存在这种危害。例如：</p>
+</li>
+</ul>
+<div class="table-wrapper"><table>
+  <thead>
+      <tr>
+          <th>Variable</th>
+          <th>Value</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td>gender</td>
+          <td>Female</td>
+      </tr>
+      <tr>
+          <td>seniorCitizen</td>
+          <td>No</td>
+      </tr>
+      <tr>
+          <td>partner</td>
+          <td>No</td>
+      </tr>
+      <tr>
+          <td>dependents</td>
+          <td>No</td>
+      </tr>
+      <tr>
+          <td>phoneService</td>
+          <td>Yes</td>
+      </tr>
+  </tbody>
+</table></div>
+<ul>
+<li>
+<p>部分危害表示当变量的值与基线不同时发生的危险变化。在任何给定时间，零个或多个变量可以包含与基线不同的值。如下图的等式所示，由此产生的危险变化是参数/变量的线性组合。</p>
+</li>
+<li>
+<p>如果每个变量都设置为相应的基线值，那么部分风险将等于 1（因为 $e^0 = 1$），风险比将等于基线风险。</p>
+</li>
+</ul>
+$$
+h(t \mid X) = h_0(t) \cdot \exp(\beta_1 X_1 + \beta_2 X_2 + \cdots + \beta_p X_p) \tag{1}
+$$$$
+\frac{h(t \mid X_A)}{h(t \mid X_B)} = \frac{h_0(t) \cdot \exp(\beta^T X_A)}{h_0(t) \cdot \exp(\beta^T X_B)} = \exp\left( \beta^T (X_A - X_B) \right) \tag{2}
+$$<h3 id="the-proportional-hazards-assumption"><strong>The Proportional Hazards Assumption</strong>
+</h3><ul>
+<li>Cox⻛险比方程的一个微妙但关键的元素是，基线⻛险是时间t的函数，而不是参数，而 部分⻛险是参数X的函数，而不是时间。这就是所谓的比例⻛险假设的基础。</li>
+<li>⻛险比假设表明，在Cox比例⻛险模型的背景下，两组之间的⻛险比随时间成正比。因为部分⻛险中没有t意味着部分⻛险会改变⻛险比的某些因素，从而与时间无关。</li>
+</ul>
+<h3 id="one-hot-encode-the-categorical-variables"><strong>One-Hot Encode the Categorical Variables</strong>
+</h3><ul>
+<li>为了使用<code>lifeline</code>拟合Cox⻛险比模型，必须首先对类别列进行一次编码。同时，手动选择对模型的有着较大影响的列。</li>
+<li>在创建用于拟合模型的数据框架时，重要的是要为每个单热编码变量删除一列，以避免多重共线性。</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Encode columns of interest</span>
+</span></span><span class="line"><span class="cl"><span class="n">encode_cols</span> <span class="o">=</span><span class="p">[</span><span class="s1">&#39;dependents&#39;</span><span class="p">,</span><span class="s1">&#39;internetService&#39;</span><span class="p">,</span><span class="s1">&#39;onlineBackup&#39;</span><span class="p">,</span><span class="s1">&#39;techSupport&#39;</span><span class="p">,</span><span class="s1">&#39;paperlessBilling&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="n">encoded_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">telco_pd</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">               <span class="n">columns</span><span class="o">=</span><span class="n">encode_cols</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">               <span class="n">prefix</span><span class="o">=</span><span class="n">encode_cols</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">               <span class="n">drop_first</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">encoded_pd</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Create new dataframe consisting of only the variables needed to fit the model</span>
+</span></span><span class="line"><span class="cl"><span class="n">survival_pd</span> <span class="o">=</span><span class="n">encoded_pd</span><span class="p">[[</span><span class="s1">&#39;churn&#39;</span><span class="p">,</span><span class="s1">&#39;tenure&#39;</span><span class="p">,</span><span class="s1">&#39;dependents_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;internetService_DSL&#39;</span><span class="p">,</span><span class="s1">&#39;onlineBackup_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;techSupport_Yes&#39;</span><span class="p">]]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Cast churn column as a float</span>
+</span></span><span class="line"><span class="cl"><span class="n">survival_pd</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;churn&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">survival_pd</span><span class="o">.</span><span class="n">loc</span><span class="p">[:,</span><span class="s1">&#39;churn&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="fit-the-cox-proportional-hazards-model"><strong>Fit the Cox Proportional Hazards Model</strong>
+</h3><p>在拟合模型时，我们指定alpha = 0.05。这意味着我们将使用95%的置信区间进行统计检验。 代码如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">cph</span> <span class="o">=</span> <span class="n">CoxPHFitter</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">cph</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">survival_pd</span><span class="p">,</span> <span class="s1">&#39;tenure&#39;</span><span class="p">,</span> <span class="s1">&#39;churn&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="assess-the-results-of-the-fitted-model"><strong>Assess the Results of the Fitted Model</strong>
+</h3><ul>
+<li>
+<p>每个协变量是否具有统计显著性?</p>
+<ul>
+<li>在下面标记为p的列中，可以看到每列的p值都小于&lt; 0.005。因此，每一列在统计上都是显著的，可以包括在内。</li>
+<li>与其他形式的回归类似，如果某个变量在统计上不显著，则可以从分析中删除该列，或者对相应的值重新分类。</li>
+</ul>
+</li>
+<li>
+<p>我们对系数估计值有多大信心?</p>
+<ul>
+<li>每个系数$\beta$和$exp(\beta)$的上界和下界在下面的模型摘要中给出(如exp(coef) lower95%,exp(coef) Upper 95%)。</li>
+<li>当变量相应的<code>box-and-whisker plot</code>与值1相交时，可以认为变量不重要。</li>
+</ul>
+</li>
+<li>
+<p>每个协变量对⻛险比的影响是什么?</p>
+</li>
+<li>
+<p>以<code>internetService_DSL</code>为例，下面显示<code>coef = -0.22,exp(coef) = 0.80</code>。参 照Cox⻛险比方程，这意味着当客户为其互联网服务订阅DSL时，其⻛险比降低了 0.80(相对于基线)。</p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="n">cph</span><span class="o">.</span><span class="n">print_summary</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">cph</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">hazard_ratios</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><img src="./pic/6.png" alt="5" style="zoom:80%;" />
+<h3 id="verify-if-the-model-adheres-to-the-proportional-hazard-assumption"><strong>Verify if the Model Adheres to the Proportional Hazard Assumption</strong>
+</h3><p>在评估拟合模型的结果后，下一步是验证模型是否符合比例⻛险假设。我们将使用三种方法来做到这一点:</p>
+<ul>
+<li>Method 1: Statistical Test</li>
+<li>Method 2: Schoenfield Residuals</li>
+<li>Method 3: Log-log Kaplan-Meier Plots</li>
+</ul>
+<h4 id="statistical-test"><strong>Statistical Test</strong>
+</h4><p>使用第一种方法(统计检验)的结果如下所示。从打印输出中可以看到，有三个变量的p值小于0.05，可以得出结论说明我们的模型输入中有三个变量违反了⻛险比假设。正如Kaplan- Meier的图像所暗示的那样，当看到协变量的生存曲线相交时，会出现一些意外情况。</p>
+<img src="./pic/7.png" alt="7" style="zoom:90%;" />
+<h4 id="schoenfeld-residuals"><strong>Schoenfeld Residuals</strong>
+</h4><ul>
+<li>除了进行统计测试之外，还可以利用图形输出来评估情况。这可以用<code>Schoenfeld Residuals</code>来完成。</li>
+<li>在下面的输出中，每个变量都有两个图。这两幅图的不同之处在于残值显示的顺序:秩 变换时间和km变换时间。在我们的模型中，这两种类型的图之间没有明显的差异。</li>
+<li>解释这些图的方法类似于解释线性回归的残差图。换句话说，当查看这种类型的图时，我们不希望在残差中看到任何类型的模式。当不存在模式时，中间的黑线相对平坦，表明残差与时间无关。
+<ul>
+<li>internetService_DSL: 基本平稳。</li>
+<li>onlineBackup_Yes: 较大变化。</li>
+<li>techSupport_Yes: 在末端存在些许变化。</li>
+<li>dependents_Yes: 基本平稳。</li>
+</ul>
+</li>
+</ul>
+<img src="./pic/8.png" alt="8" style="zoom:75%;" />
+<h4 id="log-log-kaplan-meier-plots"><strong>Log-log Kaplan-Meier Plots</strong>
+</h4><ul>
+<li>根据<code>Statistical Test</code>和<code>Schoenfield Residuals Plot</code>的结果，很明显，我们的模型多次违反了比例⻛险假设。</li>
+<li>为了从另一个⻆度看待问题，我们可以使用<code>log-log Kaplan-Meier</code>图。</li>
+<li>需要注意的是，<code>Kaplan-Meier</code>的变换只是改变了我们观察数据的尺度。这将有效地将数据更紧密地结合在一起，使其更容易评估。</li>
+<li>当不违反比例⻛险假设时，<code>log-log Kaplan-Meier</code>曲线将呈现平行。</li>
+<li>除了<code>internetService</code>之外，从下图中可以看出，当log(t)在1和3之间时，<code>Kaplan-Meier </code>曲线大多是平行的，但当log(t)小于1或大于3时，<code>Kaplan-Meier</code>曲线就不那么平行了。</li>
+</ul>
+<p>代码如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Utility function for plotting</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">plot_km_loglog</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ix</span> <span class="o">=</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="n">r</span>
+</span></span><span class="line"><span class="cl">    <span class="n">kmf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">C</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">r</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">kmf</span><span class="o">.</span><span class="n">plot_loglogs</span><span class="p">(</span><span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl"><span class="n">plot_km_loglog</span><span class="p">(</span><span class="s1">&#39;onlineBackup&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plot_km_loglog</span><span class="p">(</span><span class="s1">&#39;dependents&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plot_km_loglog</span><span class="p">(</span><span class="s1">&#39;internetService&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="n">plot_km_loglog</span><span class="p">(</span><span class="s1">&#39;techSupport&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><p><img src="/pic/9.png"
+	
+	
+	
+	loading="lazy"
+	
+		alt="9"
+	
+	
+></p>
+<h4 id="summary"><strong>summary</strong>
+</h4><p>Cox比例⻛险是最常用的生存分析方法之一。这部分是由于CPH是半参数模型，这意味着结果 变量不需要遵循特定的分布。此外，CPH可以很好地适应各种分布。如上所述，支撑该方法的关键假设被称为比例⻛险假设。如果违反了这个假设，就像这里的情况一样，还有许多选择。</p>
+<ul>
+<li><code>Leave the model as-is:</code>当目标是推理时，⻛险比假设是重要的。如果目标是预测，通常可以将重点放在损失度量上，作为选择最终模型的手段。</li>
+<li><code>Stratify the existing model:</code>如果违反假设的变量很少，则可以根据这些变量对模型进行分层。使用这种方法将带来不同的基线⻛险。</li>
+<li><code>Incorporate time-dependent variables:</code>正如Cox⻛险比方程时所指出的，部 分⻛险与时间无关。具体来说，基线危害是时间的函数，而部分危害是参数的函 数。当一个变量确实与时间相关时，可以使用交互变量对其进行建模。这被称为扩展Cox比例⻛险模型。</li>
+<li><code>Use Cubic Splines or Piecewise Constant Hazards: </code>与其他回归技术类似，可以使用三次样条为模型增加更多的灵活性。可以将其视为将模型分成多个部分。</li>
+<li><code>Use a Different Method:</code>虽然Cox比例⻛险方法可以在许多方面进行扩展，包括全参数形式(如三次样条)，但重要的是要知道存在其他生存分析方法。另一种 方法是加速失效时间模型。加速失效时间模型是完全参数化的，可以使用各种分布(如指数分布和威布尔分布)来建模。</li>
+</ul>
+<h2 id="accelerated-failure-time"><strong>Accelerated Failure Time</strong>
+</h2><p>与Kaplan-Meier和Cox比例⻛险相比，加速失效时间模型是一个参数模型，这意味着假设结果变量遵循指定的分布。参数模型通常不如非参数和半参数模型“灵活”。 与Cox比例⻛险相似，加速失效时间模型具有需要注意的潜在假设。</p>
+<h3 id="the-accelerated-failure-time-model-equation"><strong>The Accelerated Failure Time Model Equation</strong>
+</h3>$$
+S(A) = S(B) \times \lambda
+$$<h3 id="fit-the-accelerated-failure-time-model"><strong>Fit the Accelerated Failure Time Model</strong>
+</h3><p>在tutorial中，选择用<code>LogLogistic</code>来确定结果的分布。代码如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Import libraries</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">lifelines</span> <span class="kn">import</span> <span class="n">WeibullAFTFitter</span><span class="p">,</span><span class="n">LogNormalAFTFitter</span><span class="p">,</span><span class="n">LogLogisticAFTFitter</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">lifelines.fitters.coxph_fitter</span> <span class="kn">import</span> <span class="n">CoxPHFitter</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">lifelines.statistics</span> <span class="kn">import</span> <span class="n">proportional_hazard_test</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Load the telco silver table</span>
+</span></span><span class="line"><span class="cl"><span class="n">telco_pd</span> <span class="o">=</span> <span class="n">spark</span><span class="o">.</span><span class="n">table</span><span class="p">(</span><span class="s1">&#39;silver_monthly_customers&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">toPandas</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">encode_cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;partner&#39;</span><span class="p">,</span><span class="s1">&#39;multipleLines&#39;</span><span class="p">,</span><span class="s1">&#39;internetService&#39;</span><span class="p">,</span><span class="s1">&#39;onlineSecurity&#39;</span><span class="p">,</span> <span class="s1">&#39;onlineBackup&#39;</span><span class="p">,</span><span class="s1">&#39;deviceProtection&#39;</span><span class="p">,</span><span class="s1">&#39;techSupport&#39;</span><span class="p">,</span><span class="s1">&#39;paymentMethod&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">encoded_pd</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">get_dummies</span><span class="p">(</span><span class="n">telco_pd</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">               <span class="n">columns</span><span class="o">=</span><span class="n">encode_cols</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">               <span class="n">prefix</span><span class="o">=</span><span class="n">encode_cols</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">               <span class="n">drop_first</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">encoded_pd</span><span class="o">.</span><span class="n">head</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">survival_pd</span> <span class="o">=</span> <span class="n">encoded_pd</span><span class="p">[[</span><span class="s1">&#39;churn&#39;</span><span class="p">,</span><span class="s1">&#39;tenure&#39;</span><span class="p">,</span><span class="s1">&#39;partner_Yes&#39;</span><span class="p">,</span> <span class="s1">&#39;multipleLines_Yes&#39;</span><span class="p">,</span> \
+</span></span><span class="line"><span class="cl">                          <span class="s1">&#39;internetService_DSL&#39;</span><span class="p">,</span><span class="s1">&#39;onlineSecurity_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;onlineBackup_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;deviceProtection_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;techSupport_Yes&#39;</span><span class="p">,</span>\
+</span></span><span class="line"><span class="cl">                          <span class="s1">&#39;paymentMethod_Bank transfer (automatic)&#39;</span><span class="p">,</span><span class="s1">&#39;paymentMethod_Credit card (automatic)&#39;</span> <span class="p">]]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">aft</span> <span class="o">=</span> <span class="n">LogLogisticAFTFitter</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">aft</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">survival_pd</span><span class="p">,</span> <span class="n">duration_col</span><span class="o">=</span><span class="s1">&#39;tenure&#39;</span><span class="p">,</span> <span class="n">event_col</span><span class="o">=</span><span class="s1">&#39;churn&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Note: the output is exponentiated because it is initially in log-odds</span>
+</span></span><span class="line"><span class="cl"><span class="nb">print</span><span class="p">(</span><span class="s2">&#34;Median Survival Time:</span><span class="si">{:.2f}</span><span class="s2">&#34;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">aft</span><span class="o">.</span><span class="n">median_survival_time_</span><span class="p">)))</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="assess-the-results-of-the-fitted-model-1"><strong>Assess the Results of the Fitted Model</strong>
+</h3><ul>
+<li>
+<p><strong>Is each covariate statistically significant?</strong></p>
+<ul>
+<li>在下面标记为p的列中，可以看到每列的p值都小于&lt; 0.005。因此，每一列在统计上都是显著的，可以包括在内。</li>
+<li>与其他形式的回归类似，如果某个变量在统计上不显著，则可以从分析中删除该列，或者对相应的值重新分类。</li>
+</ul>
+</li>
+<li>
+<p><strong>How confident are we in the coefficient estimates?</strong></p>
+<ul>
+<li>下面的模型总结中提供了每个coefficient和 exp(coefficient) 的上限和下限(例如 exp(coef) 下限 95%，exp(coef) 上限 95%)。</li>
+</ul>
+</li>
+<li>
+<p><strong>What is the effect of each covariate on the hazard ratio?</strong></p>
+<ul>
+<li>以internetService_DSL为例，下面显示coef = 0.38, exp(coef) = 1.47。参照加速故障时间方程，这意味着当客户使用光纤作为互联网服务时，客户的“流失时间”会加速 1.47倍。请注意，光纤是基线值，对应于上述公式中的A组。</li>
+</ul>
+</li>
+</ul>
+<img src="/Users/lll/Desktop/report/pic/10.png" alt="10" style="zoom:75%;" />
+<h3 id="verify-if-the-model-adheres-to-assumptions"><strong>Verify if the Model Adheres to Assumptions</strong>
+</h3><ul>
+<li>
+$$
+  \frac{\log (1 - survival function)}{ survival function}
+  $$</li>
+<li>
+<p>在使用加速失效时间模型时，需要评估两个基本假设:</p>
+<ul>
+<li>这个模型是否符合比例赔率假设?  当图中的线条平行时，答案是肯定的。</li>
+<li>指定的分布是否适用于该型号?  当直线是直的时候，答案是肯定的。</li>
+</ul>
+</li>
+<li>
+<p>How does our model fare?</p>
+<ul>
+<li>
+<p>在大多数情况下，每个情节中的线都不是平行的。这意味着加速失效时间不适用于指定的模型。</p>
+</li>
+<li>
+<p>在大多数情况下，每张图中的线都是相对笔直的。这意味着选择<code>log- logistics</code>作为 指定的分布是一个合理的选择。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>代码如下:</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Fit the Kaplan-Meier model</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">lifelines</span> <span class="kn">import</span> <span class="n">KaplanMeierFitter</span>
+</span></span><span class="line"><span class="cl"><span class="n">kmf</span> <span class="o">=</span> <span class="n">KaplanMeierFitter</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="n">T</span><span class="o">=</span><span class="n">telco_pd</span><span class="p">[</span><span class="s1">&#39;tenure&#39;</span><span class="p">]</span> <span class="c1">#duration</span>
+</span></span><span class="line"><span class="cl"><span class="n">C</span><span class="o">=</span><span class="n">telco_pd</span><span class="p">[</span><span class="s1">&#39;churn&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span> <span class="c1">#event observed</span>
+</span></span><span class="line"><span class="cl"><span class="n">kmf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">T</span><span class="p">,</span><span class="n">C</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Out[12]: &lt;lifelines.KaplanMeierFitter:&#34;KM_estimate&#34;, fitted with 3351 total observations, 1795 right-censored observations&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Utility function for plotting</span>
+</span></span><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">plot_km_logOdds</span><span class="p">(</span><span class="n">col</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">  <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">111</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ix</span> <span class="o">=</span> <span class="n">telco_pd</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">==</span> <span class="n">r</span>
+</span></span><span class="line"><span class="cl">    <span class="n">kmf</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span> <span class="n">C</span><span class="p">[</span><span class="n">ix</span><span class="p">],</span><span class="n">label</span><span class="o">=</span><span class="n">r</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sf</span> <span class="o">=</span> <span class="n">kmf</span><span class="o">.</span><span class="n">survival_function_</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sf</span><span class="p">[</span><span class="s1">&#39;failureOdds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">sf</span><span class="p">))</span><span class="o">/</span><span class="n">sf</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sf</span><span class="p">[</span><span class="s1">&#39;logTime&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sf</span><span class="o">.</span><span class="n">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">sf</span><span class="p">[</span><span class="s1">&#39;logTime&#39;</span><span class="p">],</span><span class="n">sf</span><span class="p">[</span><span class="s1">&#39;failureOdds&#39;</span><span class="p">])</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><img src="/Users/lll/Desktop/report/pic/11.png" alt="11" style="zoom:75%;" />
+<h2 id="customer_lifetime_value">customer_lifetime_value
+</h2><h3 id="create-widgets-for-dashboard"><strong>Create Widgets for Dashboard</strong>
+</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Create widgets</span>
+</span></span><span class="line"><span class="cl"><span class="n">cols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;dependents_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;internetService_DSL&#39;</span><span class="p">,</span><span class="s1">&#39;onlineBackup_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;techSupport_Yes&#39;</span><span class="p">,</span><span class="s1">&#39;partner_Yes&#39;</span><span class="p">,</span><span class="s1">&#39; internal rate of return&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="n">dbutils</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">removeAll</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="n">col</span> <span class="o">==</span> <span class="s1">&#39; internal rate of return&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dbutils</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="s1">&#39; internal rate of return&#39;</span><span class="p">,</span><span class="n">defaultValue</span><span class="o">=</span><span class="s1">&#39;0.10&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="k">else</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">dbutils</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">dropdown</span><span class="p">(</span><span class="n">col</span><span class="p">,</span><span class="n">choices</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;0&#39;</span><span class="p">,</span><span class="s1">&#39;1&#39;</span><span class="p">],</span><span class="n">defaultValue</span><span class="o">=</span><span class="s1">&#39;0&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># Construct dataframe with values from widgets</span>
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_widget_values</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">  <span class="n">widget_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">col</span><span class="p">:</span><span class="n">dbutils</span><span class="o">.</span><span class="n">widgets</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">col</span><span class="p">)</span> <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">cols</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">widget_dict</span><span class="p">,</span><span class="n">orient</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+</span></span><span class="line"><span class="cl"> 
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">get_payback_df</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">  <span class="n">df</span> <span class="o">=</span> <span class="n">get_widget_values</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">  <span class="n">irr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39; internal rate of return&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;float64&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="mi">12</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cohort_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([</span><span class="mf">1.00</span><span class="p">]),</span><span class="nb">round</span><span class="p">(</span><span class="n">cph</span><span class="o">.</span><span class="n">predict_survival_function</span><span class="p">(</span><span class="n">df</span><span class="p">),</span><span class="mi">2</span><span class="p">)])</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">:</span><span class="s1">&#39;Survival Probability&#39;</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Contract Month&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cohort_df</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;int&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Monthly Profit for the Selected Plan&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">30</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Avg Expected Monthly Profit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Survival Probability&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Monthly Profit for the Selected 		Plan&#39;</span><span class="p">],</span><span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;NPV of Avg Expected Monthly Profit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Avg Expected Monthly Profit&#39;</span><span class="p">]</span> <span class="o">/</span> <span class="p">((</span><span class="mi">1</span><span class="o">+</span><span class="n">irr</span><span class="p">)</span><span class="o">**</span><span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Contract 		Month&#39;</span><span class="p">]),</span><span class="mi">2</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Cumulative NPV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;NPV of Avg Expected Monthly Profit&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">cumsum</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">  <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Contract Month&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cohort_df</span><span class="p">[</span><span class="s1">&#39;Contract Month&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">cohort_df</span><span class="p">[[</span><span class="s1">&#39;Contract Month&#39;</span><span class="p">,</span><span class="s1">&#39;Survival Probability&#39;</span><span class="p">,</span><span class="s1">&#39;Monthly Profit for the Selected Plan&#39;</span><span class="p">,</span><span class="s1">&#39;Avg Expected Monthly Profit&#39;</span><span class="p">,</span><span class="s1">&#39;NPV of Avg Expected Monthly Profit&#39;</span><span class="p">,</span><span class="s1">&#39;Cumulative NPV&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="s1">&#39;Contract Month&#39;</span><span class="p">)</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="create-table-for-dashboard"><strong>Create Table for Dashboard</strong>
+</h3><ul>
+<li>
+<p>This table is generated by calling <code>get_payback_df(),</code> which uses values from the widgets as parameters.</p>
+<ul>
+<li>
+<p><code>Survival Probability: </code>Probabilities are extracted from the model using <code>predict_survival_function()</code></p>
+</li>
+<li>
+<p><code>Monthly Profit for the Selected Plan: </code>This is currently hard-coded to 30 for illustrational purposes. In practice, you would use the respective internal data.</p>
+</li>
+<li>
+<p><code>Avg Expected Monthly Profit:</code> On average, the expected monthly profit for a given customer is Survival Probability x Monthly Profit for the respective plan.</p>
+</li>
+<li>
+<p><code>NPV of Avg Expected Monthly Profit:</code> Since a dollar received today is worth more than a dollar received in a few years for now, it is common to use <code>Net Present Value</code>. The formula used here is:</p>
+<ul>
+<li><code>Avg Expected Monthly Profit </code>/ ((1 + <code>Internal Rate of Return</code>) ^ <code>Contract Month</code>)</li>
+<li>The default value of <code>Internal Rate of Return</code> is set to 10%, however, you should use the number that is accepted in your line of business.</li>
+</ul>
+</li>
+<li>
+<p><code>Cumulative NPV: </code>Cumulative sum of <code>NPV of Avg Expected Monthly Profit</code></p>
+</li>
+</ul>
+</li>
+</ul>
+<img src="/Users/lll/Desktop/report/pic/12.png" alt="12" style="zoom:70%;" />
+<h3 id="create-cumulative-npv-chart-for-dashboard"><strong>Create Cumulative NPV Chart for Dashboard</strong>
+</h3><p>许多组织将投资回收期作为优化支出的一种手段。这张图表说明了你愿意为获得一个用户而花费的最大金额(假设你不愿意在这个群体上赔钱)。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">seaborn</span> <span class="k">as</span> <span class="nn">sns</span>
+</span></span><span class="line"><span class="cl"><span class="n">ax</span> <span class="o">=</span> <span class="n">sns</span><span class="o">.</span><span class="n">barplot</span><span class="p">([</span><span class="s1">&#39;12 Months&#39;</span><span class="p">,</span><span class="s1">&#39;24 Months&#39;</span><span class="p">,</span><span class="s1">&#39;36 Months&#39;</span><span class="p">],</span><span class="n">get_payback_df</span><span class="p">()</span><span class="o">.</span><span class="n">iloc</span><span class="p">[[</span><span class="mi">11</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">35</span><span class="p">],:][</span><span class="s1">&#39;Cumulative NPV&#39;</span><span class="p">])</span>
+</span></span></code></pre></td></tr></table>
+</div>
+</div><img src="/Users/lll/Desktop/report/pic/13.png" alt="13" style="zoom:75%;" />
+<h3 id="create-survival-probability-curve-chart-for-dashboard"><strong>Create Survival Probability Curve Chart for Dashboard</strong>
+</h3><ul>
+<li>
+<p>This is the same type of visual seen in the previous notebooks but customized to the parameters entered into the widgets.</p>
+<img src="/Users/lll/Desktop/report/pic/14.png" alt="14" style="zoom:75%;" />
+</li>
+</ul>
+<h2 id="summary-1"><strong>summary</strong>
+</h2><ul>
+<li>
+<p>基本流程:</p>
+<ul>
+<li>创建数据库，读取数据集。</li>
+<li>绘制Kaplan-Meier生存曲线及进行 log-rank test。</li>
+<li>分析对Kaplan-Meier生存曲线有较大影响的变量。</li>
+<li>拟合模型(如:Cox Proportional Hazards Model)，分析不同变量对生存曲线影响程度。</li>
+<li>检查是否符合模型的假设。</li>
+<li>预测分析，得到结果。</li>
+</ul>
+</li>
+<li>
+<p>注意事项:</p>
+<ul>
+<li>Kaplan-Meier生存曲线主要描述不同组别生存曲线间的差异，Cox Proportional Hazards Model可以描述不同变量对生存概率和生存时间的影响。</li>
+<li>要注意不同模型的假设，以保证模型效果。验证Cox Proportional Hazards Model的假设可以使用Statistical Test，Schoenfield Residuals，Log-log Kaplan-Meier Plots。 accelerated_failure_time模型的假设可以通过绘制log-log km 曲线验证。</li>
+<li>one hot编码可以将Categorical Variables转换为数字向量，对于模型来说会更加易于使用。同时，常常需要drop其中一列，以防止多重共线性。</li>
+</ul>
+</li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+
+    
+    <section class="article-copyright">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-copyright" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <path d="M14.5 9a3.5 4 0 1 0 0 6" />
+</svg>
+
+
+
+        <span>Licensed under CC BY-NC-SA 4.0</span>
+    </section>
+    </footer>
+
+
+    
+        <link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI&#43;WdtXRGWt2kTvGFasHpSy3SV"crossorigin="anonymous"
+            ><script 
+                src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG&#43;vnGctmUb0ZY0l8"crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"integrity="sha384-&#43;VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4&#43;/RRE05"crossorigin="anonymous"
+                defer
+                >
+            </script><script>
+    window.addEventListener("DOMContentLoaded", () => {
+	const mainArticleElement = document.querySelector(".main-article");
+        renderMathInElement(mainArticleElement, {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ],
+            ignoredClasses: ["gist"]
+        });})
+</script>
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2025 yy
+    </section>
+    
+    <section class="powerby">
+        使用 <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> 构建 <br />
+        主题 <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.30.0">Stack</a></b> 由 <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a> 设计
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.1e9a3bafd846ced4c345d084b355fb8c7bae75701c338f8a1f8a82c780137826.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
