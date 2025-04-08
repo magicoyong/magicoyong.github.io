@@ -672,7 +672,7 @@ $$
 &lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;img src=&#34;./pic/11.png&#34; alt=&#34;11&#34; style=&#34;zoom:75%;&#34; /&gt;
-&lt;h2 id=&#34;customer_lifetime_value&#34;&gt;customer_lifetime_value
+&lt;h2 id=&#34;customer-lifetime-value&#34;&gt;customer lifetime value
 &lt;/h2&gt;&lt;h3 id=&#34;create-widgets-for-dashboard&#34;&gt;&lt;strong&gt;Create Widgets for Dashboard&lt;/strong&gt;
 &lt;/h3&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
 &lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;
@@ -759,7 +759,7 @@ $$
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;img src=&#34;https://magicoyong.github.io/Users/lll/Desktop/report/pic/12.png&#34; alt=&#34;12&#34; style=&#34;zoom:70%;&#34; /&gt;
+&lt;img src=&#34;./pic/12.png&#34; alt=&#34;12&#34; style=&#34;zoom:70%;&#34; /&gt;
 &lt;h3 id=&#34;create-cumulative-npv-chart-for-dashboard&#34;&gt;&lt;strong&gt;Create Cumulative NPV Chart for Dashboard&lt;/strong&gt;
 &lt;/h3&gt;&lt;p&gt;许多组织将投资回收期作为优化支出的一种手段。这张图表说明了你愿意为获得一个用户而花费的最大金额(假设你不愿意在这个群体上赔钱)。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;
